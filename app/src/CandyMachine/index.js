@@ -46,7 +46,38 @@ const CandyMachine = ({ walletAddress }) => {
     const presale = candyMachine.data.whitelistMintSettings && candyMachine.data.whitelistMintSettings.presale &&
     (!candyMachine.data.goLiveDate || candyMachine.data.goLiveDate.toNumber() > new Date().getTime() / 1000);
     const goLiveDateTimeString = `${new Date(goLiveDate * 1000).toGMTString()}`;
-    setCandyMachine(candyMachine);
+    setCandyMachine({
+      id: process.env.REACT_APP_CANDY_MACHINE_ID,
+      program,
+      state: {
+        itemsAvailable,
+        itemsRedeemed,
+        itemsRemaining,
+        goLiveDate,
+        goLiveDateTimeString,
+        isSoldOut: itemsRemaining === 0,
+        isActive:
+        (presale ||
+          candyMachine.data.goLiveDate.toNumber() <
+          new Date().getTime() / 1000) &&
+          (candyMachine.endSettings
+            ? candyMachine.endSettings.endSettingType.date
+            ? candyMachine.endSettings.number.toNumber() >
+            new Date().getTime() / 1000
+            : itemsRedeemed <
+            candyMachine.endSettings.number.toNumber()
+            : true),
+        isPresale: presale,
+        goLiveDate: candyMachine.data.goLiveDate,
+        treasury: candyMachine.wallet,
+        tokenMint: candyMachine.tokenMint,
+        gatekeeper: candyMachine.data.gatekeeper,
+        endSettings: candyMachine.data.endSettings,
+        whitelistMintSettings: candyMachine.data.whitelistMintSettings,
+        hiddenSettings: candyMachine.data.hiddenSettings,
+        price: candyMachine.data.price,
+      },
+    });
     console.log({
       itemsAvailable, itemsRedeemed, itemsRemaining, goLiveDate, goLiveDateTimeString,
     });
@@ -328,13 +359,15 @@ const CandyMachine = ({ walletAddress }) => {
   };
 
   return (
+    candyMachine && (
     <div className="machine-container">
-      <p>Drop Date:</p>
-      <p>Items Minted:</p>
+      <p>Drop Date: {candyMachine.state.goLiveDateTimeString}</p>
+      <p>Items Minted: {candyMachine.state.itemsRedeemed} / {candyMachine.state.itemsAvailable}</p>
       <button className="cta-button mint-button" onClick={mintToken}>
         Mint NFT
       </button>
     </div>
+    )
   );
 };
 
